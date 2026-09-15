@@ -1,8 +1,8 @@
 # Trabajo Tarjeta 2026
 
 ## Integrantes del grupo
- - Apellido y nombre
- - Apellido y nombre
+ - Pregot Ciro
+ - Rubio Matías
 
 ## Aclaraciones
 El siguiente trabajo es un enunciado iterativo. Regularmente se ampliará y/o modificará el enunciado.

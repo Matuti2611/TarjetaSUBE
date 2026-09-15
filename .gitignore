@@ -1,0 +1,17 @@
+﻿## .NET Core
+bin/
+obj/
+
+## Visual Studio
+.vs/
+*.user
+*.suo
+
+## SQLite
+*.db
+*.db-shm
+*.db-wal
+
+## Logs & test results
+TestResults/
+*.log

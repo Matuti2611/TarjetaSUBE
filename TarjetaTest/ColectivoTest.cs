@@ -84,12 +84,12 @@ public class ColectivoTest
     public void PagarCon_TarjetaConSaldoInsuficiente_NoGeneraBoletoYDevuelveNull()
     {
         var colectivo = new Colectivo("122");
-        var tarjeta = new Tarjeta();
+        var tarjeta = new Tarjeta(-1000m); // -1000 - 1580 = -2580 < -2000
 
         var boleto = colectivo.pagarCon(tarjeta);
 
         Assert.That(boleto, Is.Null);
-        Assert.That(tarjeta.Saldo, Is.EqualTo(0m));
+        Assert.That(tarjeta.Saldo, Is.EqualTo(-1000m));
         Assert.That(_db.Boletos.Count(), Is.EqualTo(0));
     }
 
@@ -97,7 +97,7 @@ public class ColectivoTest
     public void PagarCon_TarjetaSinSaldo_EvaluaComoFalse()
     {
         var colectivo = new Colectivo("122");
-        var tarjeta = new Tarjeta();
+        var tarjeta = new Tarjeta(-1000m); // -1000 - 1580 = -2580 < -2000
 
         bool operacionExitosa = colectivo.pagarCon(tarjeta);
 

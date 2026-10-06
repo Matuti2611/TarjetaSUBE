@@ -1,8 +1,9 @@
-﻿namespace TarjetaSUBE;
+namespace TarjetaSUBE;
 
 public class Tarjeta
 {
     public const decimal LimiteSaldo = 40000m;
+    public const decimal SaldoMinimo = -2000m;
 
     public static readonly decimal[] CargasAceptadas =
     {
@@ -16,8 +17,8 @@ public class Tarjeta
 
     public Tarjeta(decimal saldoInicial)
     {
-        if (saldoInicial < 0)
-            throw new ArgumentException("El saldo inicial no puede ser negativo.");
+        if (saldoInicial < SaldoMinimo)
+            throw new ArgumentException($"El saldo inicial no puede ser menor a ${SaldoMinimo}.");
 
         if (saldoInicial > LimiteSaldo)
             throw new ArgumentException($"El saldo inicial no puede superar el límite de ${LimiteSaldo}.");
@@ -56,7 +57,7 @@ public class Tarjeta
             throw new ArgumentException("El monto a descontar no puede ser negativo.");
         }
 
-        if (Saldo < monto)
+        if (Saldo - monto < SaldoMinimo)
         {
             return false;
         }

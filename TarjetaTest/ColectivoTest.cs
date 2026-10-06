@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using TarjetaSUBE;
 
 namespace TarjetaTest;
@@ -84,13 +84,24 @@ public class ColectivoTest
     public void PagarCon_TarjetaConSaldoInsuficiente_NoGeneraBoletoYDevuelveNull()
     {
         var colectivo = new Colectivo("122");
-        var tarjeta = new Tarjeta(); // Saldo 0 ("No hay saldo negativo")
+        var tarjeta = new Tarjeta();
 
         var boleto = colectivo.pagarCon(tarjeta);
 
         Assert.That(boleto, Is.Null);
         Assert.That(tarjeta.Saldo, Is.EqualTo(0m));
         Assert.That(_db.Boletos.Count(), Is.EqualTo(0));
+    }
+
+    [Test]
+    public void PagarCon_TarjetaSinSaldo_EvaluaComoFalse()
+    {
+        var colectivo = new Colectivo("122");
+        var tarjeta = new Tarjeta();
+
+        bool operacionExitosa = colectivo.pagarCon(tarjeta);
+
+        Assert.That(operacionExitosa, Is.False);
     }
 
     [Test]

@@ -12,10 +12,20 @@ public class Tarjeta
 
     public int Id { get; set; }
     public decimal Saldo { get; set; } = 0m;
+    public int? TarjetaTipoId { get; set; }
+    public TarjetaTipo Tipo { get; set; } = new Normal();
 
-    public Tarjeta() { }
+    public Tarjeta()
+    {
+        Tipo = new Normal();
+    }
 
-    public Tarjeta(decimal saldoInicial)
+    public Tarjeta(TarjetaTipo tipo)
+    {
+        Tipo = tipo ?? new Normal();
+    }
+
+    public Tarjeta(decimal saldoInicial, TarjetaTipo? tipo = null)
     {
         if (saldoInicial < SaldoMinimo)
             throw new ArgumentException($"El saldo inicial no puede ser menor a ${SaldoMinimo}.");
@@ -24,6 +34,12 @@ public class Tarjeta
             throw new ArgumentException($"El saldo inicial no puede superar el límite de ${LimiteSaldo}.");
 
         Saldo = saldoInicial;
+        Tipo = tipo ?? new Normal();
+    }
+
+    public decimal CalcularTarifa(decimal tarifaBasica)
+    {
+        return Tipo?.CalcularTarifa(tarifaBasica) ?? tarifaBasica;
     }
 
     public bool Cargar(decimal monto)

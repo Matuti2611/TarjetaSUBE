@@ -144,6 +144,50 @@ public class ColectivoTest
     }
 
     [Test]
+    public void PagarCon_BoletoGratuitoEstudiantil_GeneraBoletoSinDescontarSaldo()
+    {
+        var colectivo = new Colectivo("122");
+        var tarjeta = new Tarjeta(0m, new BoletoGratuitoEstudiantil());
+
+        var boleto = colectivo.pagarCon(tarjeta);
+
+        Assert.That(boleto, Is.Not.Null);
+        Assert.That(boleto!.Tarifa, Is.EqualTo(0m));
+        Assert.That(boleto.SaldoRestante, Is.EqualTo(0m));
+        Assert.That(tarjeta.Saldo, Is.EqualTo(0m));
+        Assert.That(_db.Boletos.Count(), Is.EqualTo(1));
+    }
+
+    [Test]
+    public void PagarCon_FranquiciaCompletaConSaldoNegativo_GeneraBoletoSinModificarSaldo()
+    {
+        var colectivo = new Colectivo("122");
+        var tarjeta = new Tarjeta(-1580m, new FranquiciaCompleta());
+
+        var boleto = colectivo.pagarCon(tarjeta);
+
+        Assert.That(boleto, Is.Not.Null);
+        Assert.That(boleto!.Tarifa, Is.EqualTo(0m));
+        Assert.That(tarjeta.Saldo, Is.EqualTo(-1580m));
+        Assert.That(_db.Boletos.Count(), Is.EqualTo(1));
+    }
+
+    [Test]
+    public void PagarCon_MedioBoletoConSaldoInsuficiente_PermiteSaldoNegativo()
+    {
+        var colectivo = new Colectivo("122");
+        var tarjeta = new Tarjeta(500m, new MedioBoletoEstudiantil());
+
+        var boleto = colectivo.pagarCon(tarjeta);
+
+        Assert.That(boleto, Is.Not.Null);
+        Assert.That(boleto!.Tarifa, Is.EqualTo(790m));
+        Assert.That(tarjeta.Saldo, Is.EqualTo(-290m));
+        Assert.That(boleto.SaldoRestante, Is.EqualTo(-290m));
+        Assert.That(_db.Boletos.Count(), Is.EqualTo(1));
+    }
+
+    [Test]
     public void PagarCon_MedioBoletoEstudiantil_MontoDelBoletoEsSiempreLaMitadDelNormal()
     {
         var colectivo = new Colectivo("102 Negra");

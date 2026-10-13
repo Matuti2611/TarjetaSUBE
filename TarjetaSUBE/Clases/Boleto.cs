@@ -1,4 +1,4 @@
-﻿namespace TarjetaSUBE;
+namespace TarjetaSUBE;
 
 public class Boleto
 {
@@ -28,4 +28,6 @@ public class Boleto
     {
         return $"Boleto | Línea: {Linea} | Tarifa: ${Tarifa} | Saldo restante: ${SaldoRestante} | Fecha: {Fecha:dd/MM/yyyy HH:mm:ss}";
     }
+
+    public static implicit operator bool(Boleto? b) => b is not null;
 }

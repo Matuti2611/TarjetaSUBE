@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using TarjetaSUBE;
 
 namespace TarjetaTest;
@@ -43,9 +43,9 @@ public class TarjetaTest
     }
 
     [Test]
-    public void ConstructorConSaldoNegativo_LanzaArgumentException()
+    public void ConstructorConSaldoMenorAlSaldoMinimo_LanzaArgumentException()
     {
-        Assert.Throws<ArgumentException>(() => new Tarjeta(-100m));
+        Assert.Throws<ArgumentException>(() => new Tarjeta(-2001m));
     }
 
     [Test]
@@ -147,14 +147,38 @@ public class TarjetaTest
     }
 
     [Test]
-    public void DescontarSaldo_SinSaldoSuficiente_NoModificaSaldoYDevuelveFalse()
+    public void DescontarSaldo_HastaSaldoNegativoMaximoDe2000_DescuentaYPermiteViaje()
     {
-        var tarjeta = new Tarjeta();
-        // Saldo es 0 y se intenta descontar 1580: "No hay saldo negativo"
+        var tarjeta = new Tarjeta(); // saldo 0
+        var resultado = tarjeta.DescontarSaldo(1580m);
+
+        Assert.That(resultado, Is.True);
+        Assert.That(tarjeta.Saldo, Is.EqualTo(-1580m));
+    }
+
+    [Test]
+    public void DescontarSaldo_SuperaSaldoNegativoPermitido_NoPermiteDescuentoYNoModificaSaldo()
+    {
+        var tarjeta = new Tarjeta(); // saldo 0
+        tarjeta.DescontarSaldo(1580m); // saldo = -1580m
+
+        // Intentar otro viaje de 1580 llevaría el saldo a -3160m < -2000m
         var resultado = tarjeta.DescontarSaldo(1580m);
 
         Assert.That(resultado, Is.False);
-        Assert.That(tarjeta.Saldo, Is.EqualTo(0m));
+        Assert.That(tarjeta.Saldo, Is.EqualTo(-1580m));
+    }
+
+    [Test]
+    public void Cargar_ConSaldoNegativo_DescuentaCorrectamenteLosViajesConsumidos()
+    {
+        var tarjeta = new Tarjeta();
+        tarjeta.DescontarSaldo(1580m); // Viaje plus consumido, saldo = -1580m
+
+        tarjeta.Cargar(2000m);
+
+        // Al cargar 2000, se salda la deuda de 1580 y quedan 420
+        Assert.That(tarjeta.Saldo, Is.EqualTo(420m));
     }
 
     [Test]

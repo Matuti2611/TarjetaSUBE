@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 
 namespace TarjetaSUBE;
 
@@ -11,6 +11,7 @@ public class TarjetaDbContext : DbContext
     public DbSet<Tarjeta> Tarjetas => Set<Tarjeta>();
     public DbSet<Colectivo> Colectivos => Set<Colectivo>();
     public DbSet<Boleto> Boletos => Set<Boleto>();
+    public DbSet<TarjetaTipo> TarjetaTipos => Set<TarjetaTipo>();
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -24,6 +25,16 @@ public class TarjetaDbContext : DbContext
     {
         modelBuilder.Entity<Tarjeta>()
             .Property(t => t.Saldo)
+            .HasPrecision(18, 2);
+
+        modelBuilder.Entity<Tarjeta>()
+            .HasOne(t => t.Tipo)
+            .WithMany()
+            .HasForeignKey(t => t.TarjetaTipoId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<TarjetaTipo>()
+            .Property(t => t.MultiplicadorTarifa)
             .HasPrecision(18, 2);
 
         modelBuilder.Entity<Colectivo>()

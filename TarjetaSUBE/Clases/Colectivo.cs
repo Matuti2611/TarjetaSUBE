@@ -1,4 +1,4 @@
-﻿namespace TarjetaSUBE;
+namespace TarjetaSUBE;
 
 public class Colectivo
 {
@@ -30,14 +30,16 @@ public class Colectivo
         if (tarjeta == null)
             throw new ArgumentNullException(nameof(tarjeta));
 
-        if (!tarjeta.DescontarSaldo(Tarifa))
+        decimal tarifaACobrar = tarjeta.CalcularTarifa(Tarifa);
+
+        if (tarifaACobrar > 0m && !tarjeta.DescontarSaldo(tarifaACobrar))
         {
             return null;
         }
 
         var boleto = new Boleto
         {
-            Tarifa = Tarifa,
+            Tarifa = tarifaACobrar,
             Fecha = Contexto.Reloj.Ahora,
             SaldoRestante = tarjeta.Saldo,
             Linea = Linea,

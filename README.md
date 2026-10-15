@@ -1,3 +1,5 @@
+<img src="https://media.tenor.com/XHZd187xd7YAAAAj/cat.gif" align="right" width="160" alt="gif" />
+
 # Trabajo Tarjeta 2026
 
 ## Integrantes del grupo

@@ -322,4 +322,74 @@ public class ColectivoTest
         Assert.That(boletoDiaSiguiente, Is.Not.Null);
         Assert.That(boletoDiaSiguiente!.Tarifa, Is.EqualTo(790m)); // Vuelve a ser medio boleto
     }
+
+    [Test]
+    public void PagarCon_BoletoGratuitoEstudiantil_MaximoDosViajesGratisPorDia()
+    {
+        var reloj = new ProveedorDeFechaFija(new DateTime(2026, 10, 19, 8, 0, 0));
+        Contexto.Reloj = reloj;
+
+        var colectivo = new Colectivo("102 Negra");
+        var tarjeta = new Tarjeta(0m, new BoletoGratuitoEstudiantil());
+
+        var boleto1 = colectivo.pagarCon(tarjeta);
+        Assert.That(boleto1, Is.Not.Null);
+        Assert.That(boleto1!.Tarifa, Is.EqualTo(0m));
+        Assert.That(tarjeta.Saldo, Is.EqualTo(0m));
+
+        reloj.FechaFija = reloj.FechaFija.AddMinutes(2); // No tiene limitación de 5 minutos
+
+        var boleto2 = colectivo.pagarCon(tarjeta);
+        Assert.That(boleto2, Is.Not.Null);
+        Assert.That(boleto2!.Tarifa, Is.EqualTo(0m));
+        Assert.That(tarjeta.Saldo, Is.EqualTo(0m));
+    }
+
+    [Test]
+    public void PagarCon_BoletoGratuitoEstudiantil_TercerViajeEnElMismoDia_CobraPrecioCompleto()
+    {
+        var reloj = new ProveedorDeFechaFija(new DateTime(2026, 10, 19, 8, 0, 0));
+        Contexto.Reloj = reloj;
+
+        var colectivo = new Colectivo("102 Negra");
+        var tarjeta = new Tarjeta(3000m, new BoletoGratuitoEstudiantil());
+
+        // Viajes 1 y 2: gratis
+        colectivo.pagarCon(tarjeta);
+        reloj.FechaFija = reloj.FechaFija.AddMinutes(2);
+        colectivo.pagarCon(tarjeta);
+        Assert.That(tarjeta.Saldo, Is.EqualTo(3000m));
+
+        // Viaje 3: precio completo
+        reloj.FechaFija = reloj.FechaFija.AddMinutes(2);
+        var boleto3 = colectivo.pagarCon(tarjeta);
+
+        Assert.That(boleto3, Is.Not.Null);
+        Assert.That(boleto3!.Tarifa, Is.EqualTo(1580m));
+        Assert.That(tarjeta.Saldo, Is.EqualTo(1420m)); // 3000 - 1580 = 1420
+    }
+
+    [Test]
+    public void PagarCon_BoletoGratuitoEstudiantil_CambioDeDia_VuelveATenerViajesGratis()
+    {
+        var reloj = new ProveedorDeFechaFija(new DateTime(2026, 10, 19, 8, 0, 0));
+        Contexto.Reloj = reloj;
+
+        var colectivo = new Colectivo("102 Negra");
+        var tarjeta = new Tarjeta(5000m, new BoletoGratuitoEstudiantil());
+
+        colectivo.pagarCon(tarjeta); // Viaje 1: 0
+        reloj.FechaFija = reloj.FechaFija.AddMinutes(2);
+        colectivo.pagarCon(tarjeta); // Viaje 2: 0
+        reloj.FechaFija = reloj.FechaFija.AddMinutes(2);
+        var boleto3 = colectivo.pagarCon(tarjeta); // Viaje 3: 1580
+        Assert.That(boleto3!.Tarifa, Is.EqualTo(1580m));
+
+        // Avanzar al día siguiente
+        reloj.FechaFija = new DateTime(2026, 10, 20, 8, 0, 0);
+
+        var boletoNuevoDia = colectivo.pagarCon(tarjeta);
+        Assert.That(boletoNuevoDia, Is.Not.Null);
+        Assert.That(boletoNuevoDia!.Tarifa, Is.EqualTo(0m)); // Vuelve a ser gratis
+    }
 }

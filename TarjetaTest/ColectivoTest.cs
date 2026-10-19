@@ -215,4 +215,111 @@ public class ColectivoTest
         Assert.That(boleto.Tarifa, Is.EqualTo(790m));
         Assert.That(tarjeta.Saldo, Is.EqualTo(1210m)); // 2000 - 790 = 1210
     }
+
+    [Test]
+    public void PagarCon_MedioBoleto_MenosDeCincoMinutos_NoDejaMarcarYDevuelveNull()
+    {
+        var reloj = new ProveedorDeFechaFija(new DateTime(2026, 10, 19, 8, 0, 0));
+        Contexto.Reloj = reloj;
+
+        var colectivo = new Colectivo("102 Negra");
+        var tarjeta = new Tarjeta(5000m, new MedioBoletoEstudiantil());
+
+        var primerBoleto = colectivo.pagarCon(tarjeta);
+        Assert.That(primerBoleto, Is.Not.Null);
+        Assert.That(tarjeta.Saldo, Is.EqualTo(4210m)); // 5000 - 790 = 4210
+
+        // Intento a los 4 minutos y 59 segundos
+        reloj.FechaFija = reloj.FechaFija.AddMinutes(4).AddSeconds(59);
+
+        var segundoBoleto = colectivo.pagarCon(tarjeta);
+
+        Assert.That(segundoBoleto, Is.Null);
+        Assert.That(tarjeta.Saldo, Is.EqualTo(4210m)); // No debe descontar saldo
+        Assert.That(_db.Boletos.Count(), Is.EqualTo(1)); // No debe emitir nuevo boleto
+    }
+
+    [Test]
+    public void PagarCon_MedioBoleto_CincoMinutosExactos_PermiteMarcarSegundoViaje()
+    {
+        var reloj = new ProveedorDeFechaFija(new DateTime(2026, 10, 19, 8, 0, 0));
+        Contexto.Reloj = reloj;
+
+        var colectivo = new Colectivo("102 Negra");
+        var tarjeta = new Tarjeta(5000m, new MedioBoletoEstudiantil());
+
+        var primerBoleto = colectivo.pagarCon(tarjeta);
+        Assert.That(primerBoleto, Is.Not.Null);
+
+        // Avanzar exactamente 5 minutos
+        reloj.FechaFija = reloj.FechaFija.AddMinutes(5);
+
+        var segundoBoleto = colectivo.pagarCon(tarjeta);
+        Assert.That(segundoBoleto, Is.Not.Null);
+        Assert.That(segundoBoleto!.Tarifa, Is.EqualTo(790m));
+        Assert.That(tarjeta.Saldo, Is.EqualTo(3420m)); // 5000 - 790 - 790 = 3420
+        Assert.That(_db.Boletos.Count(), Is.EqualTo(2));
+    }
+
+    [Test]
+    public void PagarCon_MedioBoleto_MaximoDosViajesPorDiaConMedioBoleto_TerceroEsNormal()
+    {
+        var reloj = new ProveedorDeFechaFija(new DateTime(2026, 10, 19, 8, 0, 0));
+        Contexto.Reloj = reloj;
+
+        var colectivo = new Colectivo("102 Negra");
+        var tarjeta = new Tarjeta(10000m, new MedioBoletoEstudiantil());
+
+        // Viaje 1: 50%
+        var boleto1 = colectivo.pagarCon(tarjeta);
+        Assert.That(boleto1, Is.Not.Null);
+        Assert.That(boleto1!.Tarifa, Is.EqualTo(790m));
+
+        // Viaje 2 (10 minutos después): 50%
+        reloj.FechaFija = reloj.FechaFija.AddMinutes(10);
+        var boleto2 = colectivo.pagarCon(tarjeta);
+        Assert.That(boleto2, Is.Not.Null);
+        Assert.That(boleto2!.Tarifa, Is.EqualTo(790m));
+
+        // Viaje 3 (10 minutos después): Precio completo
+        reloj.FechaFija = reloj.FechaFija.AddMinutes(10);
+        var boleto3 = colectivo.pagarCon(tarjeta);
+        Assert.That(boleto3, Is.Not.Null);
+        Assert.That(boleto3!.Tarifa, Is.EqualTo(1580m));
+
+        // Viaje 4 (10 minutos después): Sigue cobrando precio completo
+        reloj.FechaFija = reloj.FechaFija.AddMinutes(10);
+        var boleto4 = colectivo.pagarCon(tarjeta);
+        Assert.That(boleto4, Is.Not.Null);
+        Assert.That(boleto4!.Tarifa, Is.EqualTo(1580m));
+
+        // Saldo restante: 10000 - 790 - 790 - 1580 - 1580 = 5260
+        Assert.That(tarjeta.Saldo, Is.EqualTo(5260m));
+    }
+
+    [Test]
+    public void PagarCon_MedioBoleto_CambioDeDia_ReiniciaContadorYVuelveACobrarMedioBoleto()
+    {
+        var reloj = new ProveedorDeFechaFija(new DateTime(2026, 10, 19, 8, 0, 0));
+        Contexto.Reloj = reloj;
+
+        var colectivo = new Colectivo("102 Negra");
+        var tarjeta = new Tarjeta(10000m, new MedioBoletoEstudiantil());
+
+        colectivo.pagarCon(tarjeta); // Viaje 1 hoy: 790
+
+        reloj.FechaFija = reloj.FechaFija.AddMinutes(10);
+        colectivo.pagarCon(tarjeta); // Viaje 2 hoy: 790
+
+        reloj.FechaFija = reloj.FechaFija.AddMinutes(10);
+        var boleto3 = colectivo.pagarCon(tarjeta); // Viaje 3 hoy: 1580
+        Assert.That(boleto3!.Tarifa, Is.EqualTo(1580m));
+
+        // Avanzar al día siguiente a las 08:00
+        reloj.FechaFija = new DateTime(2026, 10, 20, 8, 0, 0);
+
+        var boletoDiaSiguiente = colectivo.pagarCon(tarjeta);
+        Assert.That(boletoDiaSiguiente, Is.Not.Null);
+        Assert.That(boletoDiaSiguiente!.Tarifa, Is.EqualTo(790m)); // Vuelve a ser medio boleto
+    }
 }

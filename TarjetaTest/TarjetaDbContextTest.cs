@@ -38,6 +38,7 @@ public class TarjetaDbContextTest
         var boleto = new Boleto
         {
             Tarifa = 1580m,
+            TotalAbonado = 1580m,
             SaldoRestante = 3420m,
             Fecha = DateTime.Now,
             Linea = colectivo.Linea,
@@ -58,7 +59,8 @@ public class TarjetaDbContextTest
             .FirstOrDefault(b => b.Id == boleto.Id);
 
         Assert.That(boletoEnDb, Is.Not.Null);
-        Assert.That(boletoEnDb!.Tarjeta, Is.Not.Null);
+        Assert.That(boletoEnDb!.TotalAbonado, Is.EqualTo(1580m));
+        Assert.That(boletoEnDb.Tarjeta, Is.Not.Null);
         Assert.That(boletoEnDb.Tarjeta!.Saldo, Is.EqualTo(5000m));
         Assert.That(boletoEnDb.Colectivo, Is.Not.Null);
         Assert.That(boletoEnDb.Colectivo!.Linea, Is.EqualTo("142 Negra"));

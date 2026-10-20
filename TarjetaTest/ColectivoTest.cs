@@ -61,8 +61,10 @@ public class ColectivoTest
 
         Assert.That(boleto, Is.Not.Null);
         Assert.That(boleto!.Tarifa, Is.EqualTo(1580m));
+        Assert.That(boleto.TotalAbonado, Is.EqualTo(1580m));
         Assert.That(boleto.SaldoRestante, Is.EqualTo(1420m));
         Assert.That(boleto.Linea, Is.EqualTo("115"));
+        Assert.That(boleto.TipoTarjeta, Is.EqualTo("Normal"));
         Assert.That(boleto.Fecha, Is.EqualTo(new DateTime(2026, 9, 15, 12, 0, 0)));
         Assert.That(tarjeta.Saldo, Is.EqualTo(1420m));
     }
@@ -142,6 +144,9 @@ public class ColectivoTest
         Assert.That(boleto, Is.Not.Null);
         Assert.That(_db.Boletos.Find(boleto!.Id), Is.Not.Null);
         Assert.That(_db.Boletos.Count(), Is.EqualTo(1));
+        Assert.That(boleto.TarjetaId, Is.EqualTo(tarjeta.Id));
+        Assert.That(boleto.ColectivoId, Is.EqualTo(colectivo.Id));
+        Assert.That(boleto.TipoTarjeta, Is.EqualTo("Normal"));
     }
 
     [Test]
@@ -155,6 +160,8 @@ public class ColectivoTest
 
         Assert.That(boleto, Is.Not.Null);
         Assert.That(boleto!.Tarifa, Is.EqualTo(0m));
+        Assert.That(boleto.TotalAbonado, Is.EqualTo(0m));
+        Assert.That(boleto.TipoTarjeta, Is.EqualTo("Franquicia completa"));
         Assert.That(tarjeta.Saldo, Is.EqualTo(0m));
     }
 
@@ -168,7 +175,9 @@ public class ColectivoTest
 
         Assert.That(boleto, Is.Not.Null);
         Assert.That(boleto!.Tarifa, Is.EqualTo(0m));
+        Assert.That(boleto.TotalAbonado, Is.EqualTo(0m));
         Assert.That(boleto.SaldoRestante, Is.EqualTo(0m));
+        Assert.That(boleto.TipoTarjeta, Is.EqualTo("Boleto gratuito estudiantil"));
         Assert.That(tarjeta.Saldo, Is.EqualTo(0m));
         Assert.That(_db.Boletos.Count(), Is.EqualTo(1));
     }
@@ -183,6 +192,8 @@ public class ColectivoTest
 
         Assert.That(boleto, Is.Not.Null);
         Assert.That(boleto!.Tarifa, Is.EqualTo(0m));
+        Assert.That(boleto.TotalAbonado, Is.EqualTo(0m));
+        Assert.That(boleto.TipoTarjeta, Is.EqualTo("Franquicia completa"));
         Assert.That(tarjeta.Saldo, Is.EqualTo(-1580m));
         Assert.That(_db.Boletos.Count(), Is.EqualTo(1));
     }
@@ -197,8 +208,10 @@ public class ColectivoTest
 
         Assert.That(boleto, Is.Not.Null);
         Assert.That(boleto!.Tarifa, Is.EqualTo(790m));
+        Assert.That(boleto.TotalAbonado, Is.EqualTo(790m));
         Assert.That(tarjeta.Saldo, Is.EqualTo(-290m));
         Assert.That(boleto.SaldoRestante, Is.EqualTo(-290m));
+        Assert.That(boleto.TipoTarjeta, Is.EqualTo("Medio boleto estudiantil"));
         Assert.That(_db.Boletos.Count(), Is.EqualTo(1));
     }
 
@@ -213,6 +226,22 @@ public class ColectivoTest
         Assert.That(boleto, Is.Not.Null);
         Assert.That(boleto!.Tarifa, Is.EqualTo(colectivo.Tarifa / 2));
         Assert.That(boleto.Tarifa, Is.EqualTo(790m));
+        Assert.That(boleto.TotalAbonado, Is.EqualTo(790m));
         Assert.That(tarjeta.Saldo, Is.EqualTo(1210m)); // 2000 - 790 = 1210
+    }
+
+    [Test]
+    public void PagarCon_TarjetaConDeudaPrevia_InformaElTotalIncluyendoLaDeuda()
+    {
+        var colectivo = new Colectivo("122");
+        var tarjeta = new Tarjeta(-200m);
+
+        var boleto = colectivo.pagarCon(tarjeta);
+
+        Assert.That(boleto, Is.Not.Null);
+        Assert.That(boleto!.Tarifa, Is.EqualTo(1580m));
+        Assert.That(boleto.TotalAbonado, Is.EqualTo(1780m));
+        Assert.That(boleto.SaldoRestante, Is.EqualTo(-1780m));
+        Assert.That(tarjeta.Saldo, Is.EqualTo(-1780m));
     }
 }

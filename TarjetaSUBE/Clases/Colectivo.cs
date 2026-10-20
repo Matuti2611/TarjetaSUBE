@@ -30,6 +30,7 @@ public class Colectivo
         if (tarjeta == null)
             throw new ArgumentNullException(nameof(tarjeta));
 
+        decimal saldoAntesDelPago = tarjeta.Saldo;
         decimal tarifaACobrar = tarjeta.CalcularTarifa(Tarifa);
 
         if (tarifaACobrar > 0m && !tarjeta.DescontarSaldo(tarifaACobrar))
@@ -40,9 +41,11 @@ public class Colectivo
         var boleto = new Boleto
         {
             Tarifa = tarifaACobrar,
+            TotalAbonado = CalcularTotalAbonado(tarifaACobrar, saldoAntesDelPago),
             Fecha = Contexto.Reloj.Ahora,
             SaldoRestante = tarjeta.Saldo,
             Linea = Linea,
+            TipoTarjeta = tarjeta.Tipo?.Nombre ?? string.Empty,
             Tarjeta = tarjeta,
             TarjetaId = tarjeta.Id,
             Colectivo = this,
@@ -56,4 +59,12 @@ public class Colectivo
     }
 
     public Boleto? PagarCon(Tarjeta tarjeta) => pagarCon(tarjeta);
+
+    private static decimal CalcularTotalAbonado(decimal tarifa, decimal saldoAntesDelPago)
+    {
+        if (tarifa == 0m || saldoAntesDelPago >= 0m)
+            return tarifa;
+
+        return tarifa + Math.Abs(saldoAntesDelPago);
+    }
 }

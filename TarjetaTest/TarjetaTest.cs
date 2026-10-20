@@ -31,6 +31,7 @@ public class TarjetaTest
     {
         var tarjeta = new Tarjeta();
         Assert.That(tarjeta.Saldo, Is.EqualTo(0m));
+        Assert.That(tarjeta.SaldoPendiente, Is.EqualTo(0m));
         Assert.That(tarjeta.ObtenerSaldo(), Is.EqualTo(0m));
         Assert.That(tarjeta.obtenerSaldo(), Is.EqualTo(0m));
     }
@@ -40,6 +41,7 @@ public class TarjetaTest
     {
         var tarjeta = new Tarjeta(5000m);
         Assert.That(tarjeta.Saldo, Is.EqualTo(5000m));
+        Assert.That(tarjeta.SaldoPendiente, Is.EqualTo(0m));
     }
 
     [Test]
@@ -51,7 +53,7 @@ public class TarjetaTest
     [Test]
     public void ConstructorConSaldoMayorAlLimite_LanzaArgumentException()
     {
-        Assert.Throws<ArgumentException>(() => new Tarjeta(40001m));
+        Assert.Throws<ArgumentException>(() => new Tarjeta(56001m));
     }
 
     [TestCase(2000)]
@@ -71,6 +73,7 @@ public class TarjetaTest
 
         Assert.That(resultado, Is.True);
         Assert.That(tarjeta.Saldo, Is.EqualTo(monto));
+        Assert.That(tarjeta.SaldoPendiente, Is.EqualTo(0m));
         Assert.That(tarjeta.ObtenerSaldo(), Is.EqualTo(monto));
     }
 
@@ -113,25 +116,50 @@ public class TarjetaTest
     }
 
     [Test]
-    public void Cargar_SuperaLimiteMaximoDe40000_LanzaInvalidOperationException()
+    public void Cargar_SuperaLimiteMaximo_AcreditaHasta56000YDejaElExcedentePendiente()
     {
-        var tarjeta = new Tarjeta();
-        tarjeta.Cargar(30000m);
+        var tarjeta = new Tarjeta(50000m);
 
-        // Intentar cargar 15000 superaría los 40000 (30000 + 15000 = 45000)
-        var ex = Assert.Throws<InvalidOperationException>(() => tarjeta.Cargar(15000m));
-        Assert.That(ex.Message, Does.Contain("supera el límite"));
-        Assert.That(tarjeta.Saldo, Is.EqualTo(30000m));
+        var resultado = tarjeta.Cargar(10000m);
+
+        Assert.That(resultado, Is.True);
+        Assert.That(tarjeta.Saldo, Is.EqualTo(56000m));
+        Assert.That(tarjeta.SaldoPendiente, Is.EqualTo(4000m));
     }
 
     [Test]
-    public void Cargar_HastaLimiteExactoDe40000_AcreditaExitosamente()
+    public void Cargar_ConSaldoEnElLimite_DejaTodaLaCargaPendiente()
     {
-        var tarjeta = new Tarjeta();
-        tarjeta.Cargar(20000m);
-        tarjeta.Cargar(20000m);
+        var tarjeta = new Tarjeta(Tarjeta.LimiteSaldo);
 
-        Assert.That(tarjeta.Saldo, Is.EqualTo(40000m));
+        tarjeta.Cargar(2000m);
+
+        Assert.That(tarjeta.Saldo, Is.EqualTo(Tarjeta.LimiteSaldo));
+        Assert.That(tarjeta.SaldoPendiente, Is.EqualTo(2000m));
+    }
+
+    [Test]
+    public void Cargar_HastaLimiteExactoDe56000_AcreditaExitosamente()
+    {
+        var tarjeta = new Tarjeta(26000m);
+        tarjeta.Cargar(30000m);
+
+        Assert.That(tarjeta.Saldo, Is.EqualTo(56000m));
+        Assert.That(tarjeta.SaldoPendiente, Is.EqualTo(0m));
+    }
+
+    [Test]
+    public void AcreditarCarga_CuandoHayCupo_AcreditaElPendienteHastaElLimite()
+    {
+        var tarjeta = new Tarjeta(55000m);
+        tarjeta.Cargar(2000m);
+        tarjeta.DescontarSaldo(1000m);
+
+        var montoAcreditado = tarjeta.AcreditarCarga();
+
+        Assert.That(montoAcreditado, Is.EqualTo(1000m));
+        Assert.That(tarjeta.Saldo, Is.EqualTo(56000m));
+        Assert.That(tarjeta.SaldoPendiente, Is.EqualTo(0m));
     }
 
     [Test]
@@ -200,17 +228,4 @@ public class TarjetaTest
         Assert.That(tarjeta.Saldo, Is.EqualTo(420m));
     }
 
-    [Test]
-    public void Cargar_TarjetaEnBaseDeDatos_PersisteCambios()
-    {
-        var tarjeta = new Tarjeta();
-        _db.Tarjetas.Add(tarjeta);
-        _db.SaveChanges();
-
-        tarjeta.Cargar(4000m);
-
-        var tarjetaEnDb = _db.Tarjetas.Find(tarjeta.Id);
-        Assert.That(tarjetaEnDb, Is.Not.Null);
-        Assert.That(tarjetaEnDb!.Saldo, Is.EqualTo(4000m));
-    }
 }

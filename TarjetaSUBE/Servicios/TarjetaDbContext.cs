@@ -28,6 +28,10 @@ public class TarjetaDbContext : DbContext
             .HasPrecision(18, 2);
 
         modelBuilder.Entity<Tarjeta>()
+            .Property(t => t.SaldoPendiente)
+            .HasPrecision(18, 2);
+
+        modelBuilder.Entity<Tarjeta>()
             .HasOne(t => t.Tipo)
             .WithMany()
             .HasForeignKey(t => t.TarjetaTipoId)

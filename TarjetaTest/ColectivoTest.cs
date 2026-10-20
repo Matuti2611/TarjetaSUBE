@@ -215,4 +215,19 @@ public class ColectivoTest
         Assert.That(boleto.Tarifa, Is.EqualTo(790m));
         Assert.That(tarjeta.Saldo, Is.EqualTo(1210m)); // 2000 - 790 = 1210
     }
+
+    [Test]
+    public void PagarCon_ConSaldoPendiente_AcreditaElCupoLiberadoLuegoDelViaje()
+    {
+        var colectivo = new Colectivo("102 Negra");
+        var tarjeta = new Tarjeta(50000m);
+        tarjeta.Cargar(10000m);
+
+        var boleto = colectivo.pagarCon(tarjeta);
+
+        Assert.That(boleto, Is.Not.Null);
+        Assert.That(tarjeta.Saldo, Is.EqualTo(56000m));
+        Assert.That(tarjeta.SaldoPendiente, Is.EqualTo(2420m));
+        Assert.That(boleto!.SaldoRestante, Is.EqualTo(56000m));
+    }
 }

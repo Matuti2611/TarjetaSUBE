@@ -37,6 +37,8 @@ public class Colectivo
             return null;
         }
 
+        tarjeta.AcreditarCarga();
+
         var boleto = new Boleto
         {
             Tarifa = tarifaACobrar,

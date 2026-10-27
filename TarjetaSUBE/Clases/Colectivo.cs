@@ -31,18 +31,27 @@ public class Colectivo
             throw new ArgumentNullException(nameof(tarjeta));
 
         decimal saldoAntesDelPago = tarjeta.Saldo;
-        decimal tarifaACobrar = tarjeta.CalcularTarifa(Tarifa);
+        DateTime ahora = Contexto.Reloj.Ahora;
+
+        if (!tarjeta.PuedeViajar(ahora))
+        {
+            return null;
+        }
+
+        decimal tarifaACobrar = tarjeta.CalcularTarifa(Tarifa, ahora);
 
         if (tarifaACobrar > 0m && !tarjeta.DescontarSaldo(tarifaACobrar))
         {
             return null;
         }
 
+        tarjeta.RegistrarViaje(ahora);
+
         var boleto = new Boleto
         {
             Tarifa = tarifaACobrar,
             TotalAbonado = CalcularTotalAbonado(tarifaACobrar, saldoAntesDelPago),
-            Fecha = Contexto.Reloj.Ahora,
+            Fecha = ahora,
             SaldoRestante = tarjeta.Saldo,
             Linea = Linea,
             TipoTarjeta = tarjeta.Tipo?.Nombre ?? string.Empty,

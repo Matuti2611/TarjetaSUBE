@@ -1,4 +1,4 @@
-﻿namespace TarjetaSUBE;
+namespace TarjetaSUBE;
 
 public class TarjetaTipo
 {
@@ -22,5 +22,15 @@ public class TarjetaTipo
             return 0m;
 
         return Math.Round(tarifaBasica * MultiplicadorTarifa, 2);
+    }
+
+    public virtual decimal CalcularTarifa(decimal tarifaBasica, int viajesHoy)
+    {
+        return CalcularTarifa(tarifaBasica);
+    }
+
+    public virtual bool PuedeViajar(Tarjeta tarjeta, DateTime ahora)
+    {
+        return true;
     }
 }

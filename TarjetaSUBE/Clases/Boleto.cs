@@ -18,18 +18,27 @@ public class Boleto
 
     public Boleto() { }
 
-    public Boleto(decimal tarifa, DateTime fecha, decimal saldoRestante, string linea)
+    public Boleto(
+        decimal tarifa,
+        DateTime fecha,
+        decimal saldoRestante,
+        string linea,
+        string tipoTarjeta = "",
+        decimal? totalAbonado = null,
+        int tarjetaId = 0)
     {
         Tarifa = tarifa;
-        TotalAbonado = tarifa;
+        TotalAbonado = totalAbonado ?? tarifa;
         Fecha = fecha;
         SaldoRestante = saldoRestante;
         Linea = linea;
+        TipoTarjeta = tipoTarjeta;
+        TarjetaId = tarjetaId;
     }
 
     public override string ToString()
     {
-        return $"Boleto | Línea: {Linea} | Tarifa: ${Tarifa} | Total abonado: ${TotalAbonado} | Saldo restante: ${SaldoRestante} | Fecha: {Fecha:dd/MM/yyyy HH:mm:ss}";
+        return $"Boleto | Tarjeta: {TarjetaId} | Tipo: {TipoTarjeta} | Línea: {Linea} | Tarifa: ${Tarifa} | Total abonado: ${TotalAbonado} | Saldo restante: ${SaldoRestante} | Fecha: {Fecha:dd/MM/yyyy HH:mm:ss}";
     }
 
     public static implicit operator bool(Boleto? b) => b is not null;

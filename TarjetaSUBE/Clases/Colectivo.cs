@@ -46,6 +46,7 @@ public class Colectivo
         }
 
         tarjeta.RegistrarViaje(ahora);
+        tarjeta.AcreditarCarga();
 
         var boleto = new Boleto
         {

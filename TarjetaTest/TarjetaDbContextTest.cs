@@ -65,4 +65,22 @@ public class TarjetaDbContextTest
         Assert.That(boletoEnDb.Colectivo, Is.Not.Null);
         Assert.That(boletoEnDb.Colectivo!.Linea, Is.EqualTo("142 Negra"));
     }
+
+    [Test]
+    public void SaldoPendiente_SePersisteAlCargarUnaTarjetaQueEstaEnElLimite()
+    {
+        var tarjeta = new Tarjeta(Tarjeta.LimiteSaldo);
+        _db.Tarjetas.Add(tarjeta);
+        _db.SaveChanges();
+
+        tarjeta.Cargar(2000m);
+
+        _db.Entry(tarjeta).State = EntityState.Detached;
+
+        var tarjetaEnDb = _db.Tarjetas.Find(tarjeta.Id);
+
+        Assert.That(tarjetaEnDb, Is.Not.Null);
+        Assert.That(tarjetaEnDb!.Saldo, Is.EqualTo(Tarjeta.LimiteSaldo));
+        Assert.That(tarjetaEnDb.SaldoPendiente, Is.EqualTo(2000m));
+    }
 }

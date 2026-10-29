@@ -2,7 +2,7 @@ namespace TarjetaSUBE;
 
 public class Tarjeta
 {
-    public const decimal LimiteSaldo = 40000m;
+    public const decimal LimiteSaldo = 56000m;
     public const decimal SaldoMinimo = -2000m;
 
     public static readonly decimal[] CargasAceptadas =
@@ -12,6 +12,7 @@ public class Tarjeta
 
     public int Id { get; set; }
     public decimal Saldo { get; set; } = 0m;
+    public decimal SaldoPendiente { get; set; } = 0m;
     public int? TarjetaTipoId { get; set; }
     public TarjetaTipo Tipo { get; set; } = new Normal();
     public DateTime? UltimoViaje { get; set; }
@@ -92,22 +93,39 @@ public class Tarjeta
             throw new ArgumentException($"Monto no permitido: ${monto}. Las cargas aceptadas son: {string.Join(", ", CargasAceptadas)}.");
         }
 
-        if (Saldo + monto > LimiteSaldo)
+        SaldoPendiente += monto;
+        AcreditarCarga();
+
+        return true;
+    }
+
+    public bool cargar(decimal monto) => Cargar(monto);
+
+    public decimal AcreditarCarga()
+    {
+        if (SaldoPendiente <= 0m || Saldo >= LimiteSaldo)
         {
-            throw new InvalidOperationException($"La carga de ${monto} supera el límite máximo permitido de ${LimiteSaldo}. Saldo actual: ${Saldo}.");
+            if (Contexto.Db.ChangeTracker.Entries<Tarjeta>().Any(e => e.Entity == this))
+            {
+                Contexto.Db.SaveChanges();
+            }
+
+            return 0m;
         }
 
-        Saldo += monto;
+        decimal cupoDisponible = LimiteSaldo - Saldo;
+        decimal montoAcreditado = Math.Min(SaldoPendiente, cupoDisponible);
+
+        Saldo += montoAcreditado;
+        SaldoPendiente -= montoAcreditado;
 
         if (Contexto.Db.ChangeTracker.Entries<Tarjeta>().Any(e => e.Entity == this))
         {
             Contexto.Db.SaveChanges();
         }
 
-        return true;
+        return montoAcreditado;
     }
-
-    public bool cargar(decimal monto) => Cargar(monto);
 
     public bool DescontarSaldo(decimal monto)
     {

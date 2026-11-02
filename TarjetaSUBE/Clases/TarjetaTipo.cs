@@ -7,13 +7,16 @@ public class TarjetaTipo
     public decimal MultiplicadorTarifa { get; set; } = 1.0m;
     public bool EsGratuito { get; set; } = false;
 
+    public bool AplicarBoletoFrecuente { get; set; } = false;
+
     public TarjetaTipo() { }
 
-    public TarjetaTipo(string nombre, decimal multiplicadorTarifa, bool esGratuito = false)
+    public TarjetaTipo(string nombre, decimal multiplicadorTarifa, bool esGratuito = false, bool aplicaBoletoFrecuente = false)
     {
         Nombre = nombre;
         MultiplicadorTarifa = multiplicadorTarifa;
         EsGratuito = esGratuito || multiplicadorTarifa == 0m;
+        AplicarBoletoFrecuente = aplicaBoletoFrecuente;
     }
 
     public virtual decimal CalcularTarifa(decimal tarifaBasica)

@@ -40,6 +40,16 @@ public class Colectivo
 
         decimal tarifaACobrar = tarjeta.CalcularTarifa(Tarifa, ahora);
 
+        if (tarjeta.Tipo.AplicarBoletoFrecuente)
+        {
+            int viajesPreviosDelMes = Contexto.Db.Boletos.Count(b =>
+                b.TarjetaId == tarjeta.Id &&
+                b.Fecha.Year == ahora.Year &&
+                b.Fecha.Month == ahora.Month);
+
+            tarifaACobrar = BoletoFrecuente.CalcularTarifa(tarifaACobrar, viajesPreviosDelMes);
+        }
+
         if (tarifaACobrar > 0m && !tarjeta.DescontarSaldo(tarifaACobrar))
         {
             return null;

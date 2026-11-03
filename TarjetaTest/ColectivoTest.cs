@@ -26,6 +26,109 @@ public class ColectivoTest
         _db.Dispose();
     }
 
+    private Tarjeta CrearTarjetaNormal()
+    {
+    var tarjeta = new Tarjeta(50000m, new Normal());
+
+    _db.Tarjetas.Add(tarjeta);
+    _db.SaveChanges();
+
+    return tarjeta;
+    }
+
+    private void RegistrarViajesPrevios(
+    Tarjeta tarjeta,
+    int cantidad,
+    DateTime fecha)
+{
+    for (int i = 0; i < cantidad; i++)
+    {
+        _db.Boletos.Add(new Boleto
+        {
+            TarjetaId = tarjeta.Id,
+            Fecha = fecha,
+            Tarifa = Colectivo.TarifaBasica,
+            TotalAbonado = Colectivo.TarifaBasica,
+            SaldoRestante = tarjeta.Saldo,
+            Linea = "102 Negra"
+        });
+    }
+
+    _db.SaveChanges();
+    }
+
+    [Test]
+    public void PagarCon_NormalCon28ViajesPrevios_CobraTarifaNormal()
+    {
+        var ahora = new DateTime(2026, 11, 15, 10, 0, 0);
+        Contexto.Reloj = new ProveedorDeFechaFija(ahora);
+        var tarjeta = CrearTarjetaNormal();
+        RegistrarViajesPrevios(tarjeta, 28, ahora);
+
+        var boleto = new Colectivo("102 Negra").pagarCon(tarjeta);
+
+        Assert.That(boleto, Is.Not.Null);
+        Assert.That(boleto!.Tarifa, Is.EqualTo(Colectivo.TarifaBasica));
+    }
+
+    [Test]
+    public void PagarCon_NormalCon29ViajesPrevios_AplicaDescuentoDelVeintePorCiento()
+    {
+        var ahora = new DateTime(2026, 11, 15, 10, 0, 0);
+        Contexto.Reloj = new ProveedorDeFechaFija(ahora);
+        var tarjeta = CrearTarjetaNormal();
+        RegistrarViajesPrevios(tarjeta, 29, ahora);
+
+        var boleto = new Colectivo("102 Negra").pagarCon(tarjeta);
+
+        Assert.That(boleto, Is.Not.Null);
+        Assert.That(boleto!.Tarifa, Is.EqualTo(Colectivo.TarifaBasica * 0.80m));
+    }
+
+    [Test]
+    public void PagarCon_NormalCon79ViajesPrevios_AplicaDescuentoDelVeinticincoPorCiento()
+    {
+        var ahora = new DateTime(2026, 11, 15, 10, 0, 0);
+        Contexto.Reloj = new ProveedorDeFechaFija(ahora);
+        var tarjeta = CrearTarjetaNormal();
+        RegistrarViajesPrevios(tarjeta, 79, ahora);
+
+        var boleto = new Colectivo("102 Negra").pagarCon(tarjeta);
+
+        Assert.That(boleto, Is.Not.Null);
+        Assert.That(boleto!.Tarifa, Is.EqualTo(Colectivo.TarifaBasica * 0.75m));
+    }
+
+    [Test]
+    public void PagarCon_NormalNoCuentaViajesDeOtroMes()
+    {
+        var ahora = new DateTime(2026, 11, 15, 10, 0, 0);
+        Contexto.Reloj = new ProveedorDeFechaFija(ahora);
+        var tarjeta = CrearTarjetaNormal();
+        RegistrarViajesPrevios(tarjeta, 79, ahora.AddMonths(-1));
+
+        var boleto = new Colectivo("102 Negra").pagarCon(tarjeta);
+
+        Assert.That(boleto, Is.Not.Null);
+        Assert.That(boleto!.Tarifa, Is.EqualTo(Colectivo.TarifaBasica));
+    }
+
+    [Test]
+    public void PagarCon_MedioBoletoNoRecibeDescuentoPorUsoFrecuente()
+    {
+        var ahora = new DateTime(2026, 11, 15, 10, 0, 0);
+        Contexto.Reloj = new ProveedorDeFechaFija(ahora);
+        var tarjeta = new Tarjeta(50000m, new MedioBoletoEstudiantil());
+        _db.Tarjetas.Add(tarjeta);
+        _db.SaveChanges();
+        RegistrarViajesPrevios(tarjeta, 79, ahora);
+
+        var boleto = new Colectivo("102 Negra").pagarCon(tarjeta);
+
+        Assert.That(boleto, Is.Not.Null);
+        Assert.That(boleto!.Tarifa, Is.EqualTo(Colectivo.TarifaBasica * 0.50m));
+    }
+
     [Test]
     public void ConstructorPorDefecto_AsignaTarifaBasica()
     {

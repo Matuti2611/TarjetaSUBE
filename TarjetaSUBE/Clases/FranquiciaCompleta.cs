@@ -2,5 +2,10 @@
 
 public class FranquiciaCompleta : TarjetaTipo
 {
-    public FranquiciaCompleta() : base("Franquicia completa", 0.0m, true) { }
+    public FranquiciaCompleta()
+        : base(
+            "Franquicia completa",
+            0.0m,
+            esGratuito: true,
+            requiereHorarioDeFranquicia: true) { }
 }

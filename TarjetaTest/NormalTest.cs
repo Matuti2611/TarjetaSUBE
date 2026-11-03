@@ -19,8 +19,8 @@ public class NormalTest
     public void CalcularTarifa_DevuelveTarifaCompleta()
     {
         var tipo = new Normal();
-        var tarifa = tipo.CalcularTarifa(1580m);
+        var tarifa = tipo.CalcularTarifa(Colectivo.TarifaBasica);
 
-        Assert.That(tarifa, Is.EqualTo(1580m));
+        Assert.That(tarifa, Is.EqualTo(2150m));
     }
 }

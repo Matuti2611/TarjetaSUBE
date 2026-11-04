@@ -10,6 +10,7 @@ public class TarjetaDbContext : DbContext
 
     public DbSet<Tarjeta> Tarjetas => Set<Tarjeta>();
     public DbSet<Colectivo> Colectivos => Set<Colectivo>();
+    public DbSet<ColectivoInterurbano> ColectivosInterurbanos => Set<ColectivoInterurbano>();
     public DbSet<Boleto> Boletos => Set<Boleto>();
     public DbSet<TarjetaTipo> TarjetaTipos => Set<TarjetaTipo>();
 
@@ -23,6 +24,8 @@ public class TarjetaDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<ColectivoInterurbano>();
+
         modelBuilder.Entity<Tarjeta>()
             .Property(t => t.Saldo)
             .HasPrecision(18, 2);

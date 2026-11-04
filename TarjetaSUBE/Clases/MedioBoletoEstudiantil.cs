@@ -5,12 +5,19 @@ public class MedioBoletoEstudiantil : TarjetaTipo
     public const int LimiteViajesMedioBoleto = 2;
     public static readonly TimeSpan IntervaloMinimo = TimeSpan.FromMinutes(5);
 
-    public MedioBoletoEstudiantil() : base("Medio boleto estudiantil", 0.5m, false) { }
+    public MedioBoletoEstudiantil()
+        : base(
+            "Medio boleto estudiantil",
+            0.5m,
+            requiereHorarioDeFranquicia: true) { }
 
     public override bool PuedeViajar(Tarjeta tarjeta, DateTime ahora)
     {
         if (tarjeta == null)
             throw new ArgumentNullException(nameof(tarjeta));
+
+        if (!base.PuedeViajar(tarjeta, ahora))
+            return false;
 
         if (tarjeta.UltimoViaje.HasValue)
         {

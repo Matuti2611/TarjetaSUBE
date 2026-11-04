@@ -57,6 +57,40 @@ public class ColectivoTest
     _db.SaveChanges();
     }
 
+    [TestCase(typeof(MedioBoletoEstudiantil))]
+    [TestCase(typeof(BoletoGratuitoEstudiantil))]
+    [TestCase(typeof(FranquiciaCompleta))]
+    public void PagarCon_FranquiciaFueraDeHorario_NoGeneraBoletoNiModificaSaldo(
+        Type tipoDeFranquicia)
+    {
+        Contexto.Reloj = new ProveedorDeFechaFija(
+            new DateTime(2026, 11, 8, 10, 0, 0));
+        var tipo = (TarjetaTipo)Activator.CreateInstance(tipoDeFranquicia)!;
+        var tarjeta = new Tarjeta(5000m, tipo);
+        decimal saldoAntes = tarjeta.Saldo;
+
+        var boleto = new Colectivo("102 Negra").pagarCon(tarjeta);
+
+        Assert.That(boleto, Is.Null);
+        Assert.That(tarjeta.Saldo, Is.EqualTo(saldoAntes));
+        Assert.That(_db.Boletos.Count(), Is.EqualTo(0));
+    }
+
+    [Test]
+    public void PagarCon_NormalFueraDeHorario_PermiteElViaje()
+    {
+        Contexto.Reloj = new ProveedorDeFechaFija(
+            new DateTime(2026, 11, 8, 23, 0, 0));
+        var tarjeta = new Tarjeta(5000m, new Normal());
+
+        var boleto = new Colectivo("102 Negra").pagarCon(tarjeta);
+
+        Assert.That(boleto, Is.Not.Null);
+        Assert.That(boleto!.Tarifa, Is.EqualTo(Colectivo.TarifaBasica));
+        Assert.That(tarjeta.Saldo, Is.EqualTo(5000m - Colectivo.TarifaBasica));
+        Assert.That(_db.Boletos.Count(), Is.EqualTo(1));
+    }
+
     [Test]
     public void PagarCon_NormalCon28ViajesPrevios_CobraTarifaNormal()
     {
@@ -116,7 +150,7 @@ public class ColectivoTest
     [Test]
     public void PagarCon_MedioBoletoNoRecibeDescuentoPorUsoFrecuente()
     {
-        var ahora = new DateTime(2026, 11, 15, 10, 0, 0);
+        var ahora = new DateTime(2026, 11, 16, 10, 0, 0);
         Contexto.Reloj = new ProveedorDeFechaFija(ahora);
         var tarjeta = new Tarjeta(50000m, new MedioBoletoEstudiantil());
         _db.Tarjetas.Add(tarjeta);

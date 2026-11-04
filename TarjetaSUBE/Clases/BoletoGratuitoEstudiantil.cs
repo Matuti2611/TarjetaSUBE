@@ -4,7 +4,12 @@ public class BoletoGratuitoEstudiantil : TarjetaTipo
 {
     public const int LimiteViajesGratuitos = 2;
 
-    public BoletoGratuitoEstudiantil() : base("Boleto gratuito estudiantil", 0.0m, true) { }
+    public BoletoGratuitoEstudiantil()
+        : base(
+            "Boleto gratuito estudiantil",
+            0.0m,
+            esGratuito: true,
+            requiereHorarioDeFranquicia: true) { }
 
     public override decimal CalcularTarifa(decimal tarifaBasica, int viajesHoy)
     {

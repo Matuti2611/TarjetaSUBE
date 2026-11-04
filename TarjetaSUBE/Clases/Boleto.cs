@@ -9,6 +9,7 @@ public class Boleto
     public decimal SaldoRestante { get; set; }
     public string Linea { get; set; } = string.Empty;
     public string TipoTarjeta { get; set; } = string.Empty;
+    public bool EsTrasbordo { get; set; } = false;
 
     public int TarjetaId { get; set; }
     public Tarjeta? Tarjeta { get; set; }
@@ -25,7 +26,8 @@ public class Boleto
         string linea,
         string tipoTarjeta = "",
         decimal? totalAbonado = null,
-        int tarjetaId = 0)
+        int tarjetaId = 0,
+        bool esTrasbordo = false)
     {
         Tarifa = tarifa;
         TotalAbonado = totalAbonado ?? tarifa;
@@ -34,11 +36,13 @@ public class Boleto
         Linea = linea;
         TipoTarjeta = tipoTarjeta;
         TarjetaId = tarjetaId;
+        EsTrasbordo = esTrasbordo;
     }
 
     public override string ToString()
     {
-        return $"Boleto | Tarjeta: {TarjetaId} | Tipo: {TipoTarjeta} | Línea: {Linea} | Tarifa: ${Tarifa} | Total abonado: ${TotalAbonado} | Saldo restante: ${SaldoRestante} | Fecha: {Fecha:dd/MM/yyyy HH:mm:ss}";
+        var tipo = EsTrasbordo ? " [TRASBORDO]" : string.Empty;
+        return $"Boleto{tipo} | Tarjeta: {TarjetaId} | Tipo: {TipoTarjeta} | Línea: {Linea} | Tarifa: ${Tarifa} | Total abonado: ${TotalAbonado} | Saldo restante: ${SaldoRestante} | Fecha: {Fecha:dd/MM/yyyy HH:mm:ss}";
     }
 
     public static implicit operator bool(Boleto? b) => b is not null;

@@ -18,6 +18,10 @@ public class Tarjeta
     public DateTime? UltimoViaje { get; set; }
     public int ViajesHoy { get; set; }
 
+    // Para trasbordos: guarda la hora y la linea del ultimo boleto pagado
+    public DateTime? UltimoBoletoFecha { get; set; }
+    public string UltimoBoletoLinea { get; set; } = string.Empty;
+
     public Tarjeta()
     {
         Tipo = new Normal();
@@ -62,6 +66,17 @@ public class Tarjeta
         }
 
         UltimoViaje = ahora;
+
+        if (Contexto.Db.ChangeTracker.Entries<Tarjeta>().Any(e => e.Entity == this))
+        {
+            Contexto.Db.SaveChanges();
+        }
+    }
+
+    public void RegistrarBoleto(DateTime ahora, string linea)
+    {
+        UltimoBoletoFecha = ahora;
+        UltimoBoletoLinea = linea;
 
         if (Contexto.Db.ChangeTracker.Entries<Tarjeta>().Any(e => e.Entity == this))
         {

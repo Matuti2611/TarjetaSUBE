@@ -14,6 +14,7 @@ public class BoletoTest
         Assert.That(boleto.TotalAbonado, Is.EqualTo(0m));
         Assert.That(boleto.Linea, Is.Empty);
         Assert.That(boleto.TipoTarjeta, Is.Empty);
+        Assert.That(boleto.EsTrasbordo, Is.False);
         Assert.That(boleto.TarjetaId, Is.EqualTo(0));
     }
 
@@ -30,6 +31,26 @@ public class BoletoTest
         Assert.That(boleto.Linea, Is.EqualTo("102 Negra"));
         Assert.That(boleto.TipoTarjeta, Is.EqualTo("Normal"));
         Assert.That(boleto.TarjetaId, Is.EqualTo(25));
+    }
+
+    [Test]
+    public void ToString_CuandoEsTrasbordo_IndicaLaCondicion()
+    {
+        var fecha = new DateTime(2026, 9, 15, 14, 30, 0);
+        var boleto = new Boleto(
+            0m,
+            fecha,
+            2420m,
+            "102 Negra",
+            "Normal",
+            0m,
+            25,
+            esTrasbordo: true);
+
+        string texto = boleto.ToString();
+
+        Assert.That(boleto.EsTrasbordo, Is.True);
+        Assert.That(texto, Does.Contain("[TRASBORDO]"));
     }
 
     [Test]

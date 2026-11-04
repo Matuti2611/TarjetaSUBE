@@ -221,6 +221,25 @@ public class ColectivoTrasbordoTest
     }
 
     [Test]
+    public void Trasbordo_DespuesDeUnaHoraDesdeElPrimerBoleto_SeCobraAunqueHayaOtroTrasbordo()
+    {
+        var lineaC = new Colectivo("303");
+
+        _lineaA.pagarCon(_tarjeta);
+        _reloj.FechaFija = FechaBase.AddMinutes(50);
+        var boletoB = _lineaB.pagarCon(_tarjeta);
+        decimal saldoAntesDeC = _tarjeta.Saldo;
+
+        _reloj.FechaFija = FechaBase.AddMinutes(80);
+        var boletoC = lineaC.pagarCon(_tarjeta);
+
+        Assert.That(boletoB!.EsTrasbordo, Is.True);
+        Assert.That(boletoC, Is.Not.Null);
+        Assert.That(boletoC!.EsTrasbordo, Is.False);
+        Assert.That(_tarjeta.Saldo, Is.EqualTo(saldoAntesDeC - Colectivo.TarifaBasica));
+    }
+
+    [Test]
     public void SinBoletoAnterior_NuncaEsTrasbordo()
     {
         var boleto = _lineaA.pagarCon(_tarjeta);
@@ -260,6 +279,23 @@ public class ColectivoTrasbordoTest
     }
 
     [Test]
+    public void Trasbordo_TarjetaMedioBoletoAntesDeCincoMinutos_EsValido()
+    {
+        var tarjetaMedio = new Tarjeta(5000m, new MedioBoletoEstudiantil());
+        _db.Tarjetas.Add(tarjetaMedio);
+        _db.SaveChanges();
+
+        _lineaA.pagarCon(tarjetaMedio);
+
+        _reloj.FechaFija = FechaBase.AddMinutes(2);
+        var boleto = _lineaB.pagarCon(tarjetaMedio);
+
+        Assert.That(boleto, Is.Not.Null);
+        Assert.That(boleto!.EsTrasbordo, Is.True);
+        Assert.That(boleto.Tarifa, Is.EqualTo(0m));
+    }
+
+    [Test]
     public void Trasbordo_TarjetaBoletoGratuito_EsValido()
     {
         var tarjetaGratuita = new Tarjeta(5000m, new BoletoGratuitoEstudiantil());
@@ -271,6 +307,22 @@ public class ColectivoTrasbordoTest
         _reloj.FechaFija = FechaBase.AddMinutes(30);
         var boleto = _lineaB.pagarCon(tarjetaGratuita);
 
+        Assert.That(boleto!.EsTrasbordo, Is.True);
+    }
+
+    [Test]
+    public void Trasbordo_TarjetaFranquiciaCompleta_EsValido()
+    {
+        var tarjetaFranquicia = new Tarjeta(5000m, new FranquiciaCompleta());
+        _db.Tarjetas.Add(tarjetaFranquicia);
+        _db.SaveChanges();
+
+        _lineaA.pagarCon(tarjetaFranquicia);
+
+        _reloj.FechaFija = FechaBase.AddMinutes(30);
+        var boleto = _lineaB.pagarCon(tarjetaFranquicia);
+
+        Assert.That(boleto, Is.Not.Null);
         Assert.That(boleto!.EsTrasbordo, Is.True);
     }
 }

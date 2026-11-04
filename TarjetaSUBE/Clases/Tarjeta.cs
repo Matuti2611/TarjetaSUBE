@@ -20,10 +20,6 @@ public class Tarjeta
     public string LineaAnterior { get; set; } = string.Empty;
     public DateTime? InicioVentanaTrasbordo { get; set; }
 
-    // Para trasbordos: guarda la hora y la linea del ultimo boleto pagado
-    public DateTime? UltimoBoletoFecha { get; set; }
-    public string UltimoBoletoLinea { get; set; } = string.Empty;
-
     public Tarjeta()
     {
         Tipo = new Normal();
@@ -49,42 +45,30 @@ public class Tarjeta
     public int ObtenerViajesHoy(DateTime ahora)
     {
         if (!UltimoViaje.HasValue || UltimoViaje.Value.Date != ahora.Date)
-        {
             return 0;
-        }
 
         return ViajesHoy;
     }
-   
-    public void RegistrarViaje(DateTime ahora, string linea, bool esTrasbordo) {
-        if (!UltimoViaje.HasValue || UltimoViaje.Value.Date != ahora.Date) {
+
+    public void RegistrarViaje(DateTime ahora)
+    {
+        if (!UltimoViaje.HasValue || UltimoViaje.Value.Date != ahora.Date)
             ViajesHoy = 1;
-        }
-        else {
+        else
             ViajesHoy++;
-        }
 
         UltimoViaje = ahora;
-        LineaAnterior = linea;
-
-        if (!esTrasbordo) {
-            InicioVentanaTrasbordo = ahora;
-        }
-
-        if (Contexto.Db.ChangeTracker.Entries<Tarjeta>().Any(e => e.Entity == this)) {
-            Contexto.Db.SaveChanges();
-        }
+        GuardarCambiosSiCorresponde();
     }
 
-    public void RegistrarBoleto(DateTime ahora, string linea)
+    public void RegistrarBoleto(DateTime ahora, string linea, bool esTrasbordo)
     {
-        UltimoBoletoFecha = ahora;
-        UltimoBoletoLinea = linea;
+        LineaAnterior = linea;
 
-        if (Contexto.Db.ChangeTracker.Entries<Tarjeta>().Any(e => e.Entity == this))
-        {
-            Contexto.Db.SaveChanges();
-        }
+        if (!esTrasbordo)
+            InicioVentanaTrasbordo = ahora;
+
+        GuardarCambiosSiCorresponde();
     }
 
     public bool PuedeViajar(DateTime? fecha = null, bool esTrasbordo = false)
@@ -123,11 +107,7 @@ public class Tarjeta
     {
         if (SaldoPendiente <= 0m || Saldo >= LimiteSaldo)
         {
-            if (Contexto.Db.ChangeTracker.Entries<Tarjeta>().Any(e => e.Entity == this))
-            {
-                Contexto.Db.SaveChanges();
-            }
-
+            GuardarCambiosSiCorresponde();
             return 0m;
         }
 
@@ -136,11 +116,7 @@ public class Tarjeta
 
         Saldo += montoAcreditado;
         SaldoPendiente -= montoAcreditado;
-
-        if (Contexto.Db.ChangeTracker.Entries<Tarjeta>().Any(e => e.Entity == this))
-        {
-            Contexto.Db.SaveChanges();
-        }
+        GuardarCambiosSiCorresponde();
 
         return montoAcreditado;
     }
@@ -148,21 +124,13 @@ public class Tarjeta
     public bool DescontarSaldo(decimal monto)
     {
         if (monto < 0)
-        {
             throw new ArgumentException("El monto a descontar no puede ser negativo.");
-        }
 
         if (Saldo - monto < SaldoMinimo)
-        {
             return false;
-        }
 
         Saldo -= monto;
-
-        if (Contexto.Db.ChangeTracker.Entries<Tarjeta>().Any(e => e.Entity == this))
-        {
-            Contexto.Db.SaveChanges();
-        }
+        GuardarCambiosSiCorresponde();
 
         return true;
     }
@@ -171,4 +139,10 @@ public class Tarjeta
 
     public decimal ObtenerSaldo() => Saldo;
     public decimal obtenerSaldo() => Saldo;
+
+    private void GuardarCambiosSiCorresponde()
+    {
+        if (Contexto.Db.ChangeTracker.Entries<Tarjeta>().Any(e => e.Entity == this))
+            Contexto.Db.SaveChanges();
+    }
 }

@@ -19,7 +19,7 @@ public class FranquiciaCompletaTest
     public void CalcularTarifa_DevuelveCero()
     {
         var tipo = new FranquiciaCompleta();
-        var tarifa = tipo.CalcularTarifa(1580m);
+        var tarifa = tipo.CalcularTarifa(Colectivo.TarifaBasica);
 
         Assert.That(tarifa, Is.EqualTo(0m));
     }

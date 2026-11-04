@@ -12,7 +12,7 @@ public class TarjetaTipoTest
 
         Assert.That(tarifaSocial.Nombre, Is.EqualTo("Tarifa Social"));
         Assert.That(tarifaSocial.MultiplicadorTarifa, Is.EqualTo(0.45m));
-        Assert.That(tarifaSocial.CalcularTarifa(1580m), Is.EqualTo(711m));
+        Assert.That(tarifaSocial.CalcularTarifa(Colectivo.TarifaBasica), Is.EqualTo(967.5m));
     }
 
     [Test]

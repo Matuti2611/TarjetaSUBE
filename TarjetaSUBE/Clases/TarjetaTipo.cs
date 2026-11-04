@@ -6,14 +6,23 @@ public class TarjetaTipo
     public string Nombre { get; set; } = string.Empty;
     public decimal MultiplicadorTarifa { get; set; } = 1.0m;
     public bool EsGratuito { get; set; } = false;
+    public bool AplicarBoletoFrecuente { get; set; } = false;
+    public bool RequiereHorarioDeFranquicia { get; set; } = false;
 
     public TarjetaTipo() { }
 
-    public TarjetaTipo(string nombre, decimal multiplicadorTarifa, bool esGratuito = false)
+    public TarjetaTipo(
+        string nombre,
+        decimal multiplicadorTarifa,
+        bool esGratuito = false,
+        bool aplicaBoletoFrecuente = false,
+        bool requiereHorarioDeFranquicia = false)
     {
         Nombre = nombre;
         MultiplicadorTarifa = multiplicadorTarifa;
         EsGratuito = esGratuito || multiplicadorTarifa == 0m;
+        AplicarBoletoFrecuente = aplicaBoletoFrecuente;
+        RequiereHorarioDeFranquicia = requiereHorarioDeFranquicia;
     }
 
     public virtual decimal CalcularTarifa(decimal tarifaBasica)
@@ -29,8 +38,12 @@ public class TarjetaTipo
         return CalcularTarifa(tarifaBasica);
     }
 
-    public virtual bool PuedeViajar(Tarjeta tarjeta, DateTime ahora, bool esTrasbordo = false) {
-        return !RequiereHorarioDeFranquicia || HorarioDeFranquicia.EstaHabilitado(ahora);
+    public virtual bool PuedeViajar(
+        Tarjeta tarjeta,
+        DateTime ahora,
+        bool esTrasbordo = false)
+    {
+        return !RequiereHorarioDeFranquicia ||
+               HorarioDeFranquicia.EstaHabilitado(ahora);
     }
-
 }

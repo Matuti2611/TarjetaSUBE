@@ -17,6 +17,8 @@ public class Tarjeta
     public TarjetaTipo Tipo { get; set; } = new Normal();
     public DateTime? UltimoViaje { get; set; }
     public int ViajesHoy { get; set; }
+    public string LineaAnterior { get; set; } = string.Empty;
+    public DateTime? InicioVentanaTrasbordo { get; set; }
 
     public Tarjeta()
     {
@@ -43,9 +45,7 @@ public class Tarjeta
     public int ObtenerViajesHoy(DateTime ahora)
     {
         if (!UltimoViaje.HasValue || UltimoViaje.Value.Date != ahora.Date)
-        {
             return 0;
-        }
 
         return ViajesHoy;
     }
@@ -53,26 +53,28 @@ public class Tarjeta
     public void RegistrarViaje(DateTime ahora)
     {
         if (!UltimoViaje.HasValue || UltimoViaje.Value.Date != ahora.Date)
-        {
             ViajesHoy = 1;
-        }
         else
-        {
             ViajesHoy++;
-        }
 
         UltimoViaje = ahora;
-
-        if (Contexto.Db.ChangeTracker.Entries<Tarjeta>().Any(e => e.Entity == this))
-        {
-            Contexto.Db.SaveChanges();
-        }
+        GuardarCambiosSiCorresponde();
     }
 
-    public bool PuedeViajar(DateTime? fecha = null)
+    public void RegistrarBoleto(DateTime ahora, string linea, bool esTrasbordo)
+    {
+        LineaAnterior = linea;
+
+        if (!esTrasbordo)
+            InicioVentanaTrasbordo = ahora;
+
+        GuardarCambiosSiCorresponde();
+    }
+
+    public bool PuedeViajar(DateTime? fecha = null, bool esTrasbordo = false)
     {
         var ahora = fecha ?? Contexto.Reloj.Ahora;
-        return Tipo?.PuedeViajar(this, ahora) ?? true;
+        return Tipo?.PuedeViajar(this, ahora, esTrasbordo) ?? true;
     }
 
     public decimal CalcularTarifa(decimal tarifaBasica)
@@ -105,11 +107,7 @@ public class Tarjeta
     {
         if (SaldoPendiente <= 0m || Saldo >= LimiteSaldo)
         {
-            if (Contexto.Db.ChangeTracker.Entries<Tarjeta>().Any(e => e.Entity == this))
-            {
-                Contexto.Db.SaveChanges();
-            }
-
+            GuardarCambiosSiCorresponde();
             return 0m;
         }
 
@@ -118,11 +116,7 @@ public class Tarjeta
 
         Saldo += montoAcreditado;
         SaldoPendiente -= montoAcreditado;
-
-        if (Contexto.Db.ChangeTracker.Entries<Tarjeta>().Any(e => e.Entity == this))
-        {
-            Contexto.Db.SaveChanges();
-        }
+        GuardarCambiosSiCorresponde();
 
         return montoAcreditado;
     }
@@ -130,21 +124,13 @@ public class Tarjeta
     public bool DescontarSaldo(decimal monto)
     {
         if (monto < 0)
-        {
             throw new ArgumentException("El monto a descontar no puede ser negativo.");
-        }
 
         if (Saldo - monto < SaldoMinimo)
-        {
             return false;
-        }
 
         Saldo -= monto;
-
-        if (Contexto.Db.ChangeTracker.Entries<Tarjeta>().Any(e => e.Entity == this))
-        {
-            Contexto.Db.SaveChanges();
-        }
+        GuardarCambiosSiCorresponde();
 
         return true;
     }
@@ -153,4 +139,10 @@ public class Tarjeta
 
     public decimal ObtenerSaldo() => Saldo;
     public decimal obtenerSaldo() => Saldo;
+
+    private void GuardarCambiosSiCorresponde()
+    {
+        if (Contexto.Db.ChangeTracker.Entries<Tarjeta>().Any(e => e.Entity == this))
+            Contexto.Db.SaveChanges();
+    }
 }

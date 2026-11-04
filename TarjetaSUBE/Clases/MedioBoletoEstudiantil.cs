@@ -7,22 +7,26 @@ public class MedioBoletoEstudiantil : TarjetaTipo
 
     public MedioBoletoEstudiantil() : base("Medio boleto estudiantil", 0.5m, false) { }
 
-    public override bool PuedeViajar(Tarjeta tarjeta, DateTime ahora)
-    {
+    public override bool PuedeViajar(Tarjeta tarjeta, DateTime ahora, bool esTrasbordo = false) {
         if (tarjeta == null)
             throw new ArgumentNullException(nameof(tarjeta));
 
-        if (tarjeta.UltimoViaje.HasValue)
-        {
+        if (!base.PuedeViajar(tarjeta, ahora, esTrasbordo))
+            return false;
+
+        if (esTrasbordo)
+            return true;
+
+        if (tarjeta.UltimoViaje.HasValue) {
             var tiempoTranscurrido = ahora - tarjeta.UltimoViaje.Value;
-            if (tiempoTranscurrido < IntervaloMinimo)
-            {
+            if (tiempoTranscurrido < IntervaloMinimo) {
                 return false;
             }
         }
-
+    
         return true;
     }
+
 
     public override decimal CalcularTarifa(decimal tarifaBasica, int viajesHoy)
     {

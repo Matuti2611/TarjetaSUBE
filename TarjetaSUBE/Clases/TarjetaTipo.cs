@@ -29,8 +29,8 @@ public class TarjetaTipo
         return CalcularTarifa(tarifaBasica);
     }
 
-    public virtual bool PuedeViajar(Tarjeta tarjeta, DateTime ahora)
-    {
-        return true;
+    public virtual bool PuedeViajar(Tarjeta tarjeta, DateTime ahora, bool esTrasbordo = false) {
+        return !RequiereHorarioDeFranquicia || HorarioDeFranquicia.EstaHabilitado(ahora);
     }
+
 }

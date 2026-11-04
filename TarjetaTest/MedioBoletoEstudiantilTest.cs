@@ -29,8 +29,10 @@ public class MedioBoletoEstudiantilTest
     {
         var tipo = new MedioBoletoEstudiantil();
         var tarjeta = new Tarjeta(tipo);
-
-        Assert.That(tipo.PuedeViajar(tarjeta, DateTime.Now), Is.True);
+    
+        var ahora = new DateTime(2026, 10, 19, 10, 0, 0);
+    
+        Assert.That(tipo.PuedeViajar(tarjeta, ahora), Is.True);
     }
 
     [Test]

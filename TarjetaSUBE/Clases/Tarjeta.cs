@@ -17,6 +17,8 @@ public class Tarjeta
     public TarjetaTipo Tipo { get; set; } = new Normal();
     public DateTime? UltimoViaje { get; set; }
     public int ViajesHoy { get; set; }
+    public string LineaAnterior { get; set; } = string.Empty;
+    public DateTime? InicioVentanaTrasbordo { get; set; }
 
     // Para trasbordos: guarda la hora y la linea del ultimo boleto pagado
     public DateTime? UltimoBoletoFecha { get; set; }
@@ -53,22 +55,23 @@ public class Tarjeta
 
         return ViajesHoy;
     }
-
-    public void RegistrarViaje(DateTime ahora)
-    {
-        if (!UltimoViaje.HasValue || UltimoViaje.Value.Date != ahora.Date)
-        {
+   
+    public void RegistrarViaje(DateTime ahora, string linea, bool esTrasbordo) {
+        if (!UltimoViaje.HasValue || UltimoViaje.Value.Date != ahora.Date) {
             ViajesHoy = 1;
         }
-        else
-        {
+        else {
             ViajesHoy++;
         }
 
         UltimoViaje = ahora;
+        LineaAnterior = linea;
 
-        if (Contexto.Db.ChangeTracker.Entries<Tarjeta>().Any(e => e.Entity == this))
-        {
+        if (!esTrasbordo) {
+            InicioVentanaTrasbordo = ahora;
+        }
+
+        if (Contexto.Db.ChangeTracker.Entries<Tarjeta>().Any(e => e.Entity == this)) {
             Contexto.Db.SaveChanges();
         }
     }
@@ -84,10 +87,10 @@ public class Tarjeta
         }
     }
 
-    public bool PuedeViajar(DateTime? fecha = null)
+    public bool PuedeViajar(DateTime? fecha = null, bool esTrasbordo = false)
     {
         var ahora = fecha ?? Contexto.Reloj.Ahora;
-        return Tipo?.PuedeViajar(this, ahora) ?? true;
+        return Tipo?.PuedeViajar(this, ahora, esTrasbordo) ?? true;
     }
 
     public decimal CalcularTarifa(decimal tarifaBasica)

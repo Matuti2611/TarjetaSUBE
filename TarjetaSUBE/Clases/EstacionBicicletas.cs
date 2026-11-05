@@ -21,6 +21,15 @@ public class EstacionBicicletas
             return false;
         }
 
+        DateTime ahora = Contexto.Reloj.Ahora;
+        DateTime inicioDelDia = ahora.Date;
+        DateTime inicioDelDiaSiguiente = inicioDelDia.AddDays(1);
+
+        bool yaPagoLaTarifaDelDia = Contexto.Db.AlquileresBicicletas.Any(a =>
+            a.TarjetaId == tarjeta.Id &&
+            a.FechaRetiro >= inicioDelDia &&
+            a.FechaRetiro < inicioDelDiaSiguiente);
+
         var multasPendientes = Contexto.Db.AlquileresBicicletas
             .Where(a =>
                 a.TarjetaId == tarjeta.Id &&
@@ -28,19 +37,18 @@ public class EstacionBicicletas
                 !a.MultaCobrada)
             .ToList();
 
-        decimal montoACobrar = TarifaDiaria + multasPendientes.Sum(a => a.Multa);
+        decimal tarifaDelServicio = yaPagoLaTarifaDelDia ? 0m : TarifaDiaria;
+        decimal montoACobrar = tarifaDelServicio + multasPendientes.Sum(a => a.Multa);
 
-        if (tarjeta.Saldo < montoACobrar)
+        if (!tarjeta.DescontarSaldo(montoACobrar))
             return false;
-
-        tarjeta.DescontarSaldo(montoACobrar);
 
         foreach (var alquilerConMulta in multasPendientes)
             alquilerConMulta.MultaCobrada = true;
 
         var alquiler = new AlquilerBicicleta
         {
-            FechaRetiro = Contexto.Reloj.Ahora,
+            FechaRetiro = ahora,
             MontoAbonado = montoACobrar,
             Tarjeta = tarjeta,
             TarjetaId = tarjeta.Id,

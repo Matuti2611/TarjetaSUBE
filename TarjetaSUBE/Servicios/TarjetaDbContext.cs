@@ -13,6 +13,8 @@ public class TarjetaDbContext : DbContext
     public DbSet<ColectivoInterurbano> ColectivosInterurbanos => Set<ColectivoInterurbano>();
     public DbSet<Boleto> Boletos => Set<Boleto>();
     public DbSet<TarjetaTipo> TarjetaTipos => Set<TarjetaTipo>();
+    public DbSet<EstacionBicicletas> EstacionesBicicletas => Set<EstacionBicicletas>();
+    public DbSet<AlquilerBicicleta> AlquileresBicicletas => Set<AlquilerBicicleta>();
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -25,6 +27,26 @@ public class TarjetaDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<ColectivoInterurbano>();
+
+        modelBuilder.Entity<AlquilerBicicleta>()
+            .Property(a => a.MontoAbonado)
+            .HasPrecision(18, 2);
+
+        modelBuilder.Entity<AlquilerBicicleta>()
+            .Property(a => a.Multa)
+            .HasPrecision(18, 2);
+
+        modelBuilder.Entity<AlquilerBicicleta>()
+            .HasOne(a => a.Tarjeta)
+            .WithMany()
+            .HasForeignKey(a => a.TarjetaId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<AlquilerBicicleta>()
+            .HasOne(a => a.Estacion)
+            .WithMany()
+            .HasForeignKey(a => a.EstacionBicicletasId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<Tarjeta>()
             .Property(t => t.Saldo)
